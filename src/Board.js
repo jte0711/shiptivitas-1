@@ -20,7 +20,27 @@ export default class Board extends React.Component {
       inProgress: React.createRef(),
       complete: React.createRef(),
     }
+  
+    
   }
+
+  componentDidMount(){
+    const drake = Dragula(Array.from(document.getElementsByClassName("Swimlane-dragColumn")));
+    drake.on('drop', (el, target, source, sibling) => {
+      
+      if (target === this.swimlanes.backlog.current){
+        el.classList.remove('Card-blue', 'Card-green');
+        el.classList.add("Card-grey");
+      } else if (target === this.swimlanes.inProgress.current){
+        el.classList.remove('Card-grey', 'Card-green');
+        el.classList.add("Card-blue");
+      } else if (target === this.swimlanes.complete.current){
+        el.classList.remove('Card-blue', 'Card-grey');
+        el.classList.add("Card-green");
+      }
+    });
+  }
+
   getClients() {
     return [
       ['1','Stark, White and Abbott','Cloned Optimal Architecture', 'in-progress'],
@@ -50,6 +70,7 @@ export default class Board extends React.Component {
       status: companyDetails[3],
     }));
   }
+
   renderSwimlane(name, clients, ref) {
     return (
       <Swimlane name={name} clients={clients} dragulaRef={ref}/>
