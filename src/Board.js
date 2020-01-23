@@ -26,17 +26,55 @@ export default class Board extends React.Component {
 
   componentDidMount(){
     const drake = Dragula(Array.from(document.getElementsByClassName("Swimlane-dragColumn")));
-    drake.on('drop', (el, target, source, sibling) => {
-      
-      if (target === this.swimlanes.backlog.current){
-        el.classList.remove('Card-blue', 'Card-green');
-        el.classList.add("Card-grey");
-      } else if (target === this.swimlanes.inProgress.current){
-        el.classList.remove('Card-grey', 'Card-green');
-        el.classList.add("Card-blue");
-      } else if (target === this.swimlanes.complete.current){
-        el.classList.remove('Card-blue', 'Card-grey');
-        el.classList.add("Card-green");
+    drake.on('drop', (el, target, source, sibling) => { 
+      drake.cancel(true);
+      this.updateClients(el,target,sibling);
+    });
+  }
+
+  updateClients(el, target, sibling){
+
+    let newLanes= null;
+    if (target === this.swimlanes.backlog.current){
+      newLanes = "backlog";
+      // el.classList.remove('Card-blue', 'Card-green');
+      // el.classList.add("Card-grey");
+    } else if (target === this.swimlanes.inProgress.current){
+      newLanes = "in-progress";
+      // el.classList.remove('Card-grey', 'Card-green');
+      // el.classList.add("Card-blue");
+    } else if (target === this.swimlanes.complete.current){
+      newLanes = "complete";
+      // el.classList.remove('Card-blue', 'Card-grey');
+      // el.classList.add("Card-green");
+    }
+    console.log(sibling);
+    //Get the element data
+    let clients = this.state.clients.backlog.concat(this.state.clients.inProgress).concat(this.state.clients.complete);
+    let clientsLen = clients.length;
+    let curClient = clients.find(element => element.id === el.getAttribute("data-id"));
+    curClient.status = newLanes;
+
+    //Remove the el from old list
+    clients = clients.filter(client => client.id !== el.getAttribute("data-id"));
+
+
+    //Check the index of siblings element at the moment of dropping
+    let siblingIdx;
+    if (sibling !== null){
+      siblingIdx = clients.findIndex(client => client.id === sibling.getAttribute("data-id"));
+    } else {
+      siblingIdx = clientsLen-1;
+    }
+    //Add el to the new list
+    clients.splice(siblingIdx, 0, curClient);
+
+    //Re-render
+    this.setState({
+      clients:{
+        backlog: clients.filter(client => !client.status || client.status === 'backlog'),
+        inProgress: clients.filter(client => client.status && client.status === 'in-progress'),
+        complete: clients.filter(client => client.status && client.status === 'complete')
       }
     });
   }
